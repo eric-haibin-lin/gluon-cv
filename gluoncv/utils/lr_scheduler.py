@@ -54,10 +54,12 @@ class LRScheduler(lr_scheduler.LRScheduler):
     warmup_mode : str
         Modes for the warmup stage.
         Currently it supports 'linear' and 'constant'.
+    adaptive: bool
+        Whether to adjust learning rate based on number of devices.
     """
     def __init__(self, mode, baselr, niters, nepochs,
                  step=(30, 60, 90), step_factor=0.1, targetlr=0, power=0.9,
-                 warmup_epochs=0, warmup_lr=0, warmup_mode='linear'):
+                 warmup_epochs=0, warmup_lr=0, warmup_mode='linear', adaptive=False, base_num_gpus=None):
         super(LRScheduler, self).__init__()
         assert(mode in ['step', 'poly', 'cosine'])
         assert(warmup_mode in ['linear', 'constant'])
@@ -77,13 +79,20 @@ class LRScheduler(lr_scheduler.LRScheduler):
 
         self.N = nepochs * niters
         self.warmup_N = warmup_epochs * niters
+        self.adaptive = adaptive
+        self.base_num_gpus = base_num_gpus
+        if self.adaptive:
+            assert base_num_gpus, "base num gpus must be provided in adaptive mode"
 
     def __call__(self, num_update):
         return self.learning_rate
 
-    def update(self, i, epoch):
+    def update(self, i, epoch, num_gpus=None):
         T = epoch * self.niters + i
         assert(0 <= T <= self.N)
+
+        if self.adaptive:
+            assert num_gpus, "num gpus must be provided in adaptive mode"
 
         if self.warmup_epochs > epoch:
             # Warm-up Stage
@@ -106,3 +115,5 @@ class LRScheduler(lr_scheduler.LRScheduler):
                     (1 + cos(pi * (T - self.warmup_N) / (self.N - self.warmup_N))) / 2
             else:
                 raise NotImplementedError
+        if self.adaptive:
+            self.learning_rate *= 1.0 * self.base_num_gpus / num_gpus
