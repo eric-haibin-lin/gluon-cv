@@ -85,11 +85,15 @@ class LRScheduler(lr_scheduler.LRScheduler):
             assert base_num_gpus, "base num gpus must be provided in adaptive mode"
 
     def __call__(self, num_update):
+        i = num_update % self.niters
+        epoch = num_update // self.niters
+        prev = self.learning_rate
+        self.update(i, epoch)
         return self.learning_rate
 
     def update(self, i, epoch, num_gpus=None):
         T = epoch * self.niters + i
-        assert(0 <= T <= self.N)
+        assert(0 <= T <= self.N), (T, self.N)
 
         if self.adaptive:
             assert num_gpus, "num gpus must be provided in adaptive mode"

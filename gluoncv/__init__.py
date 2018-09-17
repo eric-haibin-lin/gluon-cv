@@ -2,7 +2,7 @@
 """GluonCV: a deep learning vision toolkit powered by Gluon."""
 from __future__ import absolute_import
 
-__version__ = '0.3.0'
+__version__ = '0.3.02'
 
 from . import data
 from . import model_zoo
