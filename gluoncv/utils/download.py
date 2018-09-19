@@ -1,7 +1,7 @@
 """Download files with progress bar."""
 import os
 import requests
-from tqdm import tqdm
+#from tqdm import tqdm
 from mxnet.gluon.utils import check_sha1
 
 def download(url, path=None, overwrite=False, sha1_hash=None):
